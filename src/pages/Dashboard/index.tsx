@@ -1,63 +1,65 @@
-import React from 'react';
+/* eslint-disable camelcase */
+import React, { useState, FormEvent } from 'react';
 import { FiChevronRight } from 'react-icons/fi';
 
 import logo from '../../assets/logo.svg';
 
+import api from '../../services/api';
+
 import { Title, Form, Repositories } from './style';
 
-const Dashboard: React.FC = () => (
-  <>
-    <img src={logo} alt="Github explorer" />
-    <Title>Explore repositórios no Github</Title>
-    <Form>
-      <input placeholder="Qual o nome do repositório?" />
-      <button type="submit">Pesquisar</button>
-    </Form>
-    <Repositories>
-      <a href="teste">
-        <img
-          src="https://avatars1.githubusercontent.com/u/29358300?s=460&u=8486fec35b12c3a0cb146db9d646150afcaca94e&v=4"
-          alt="David Lima"
+interface Repository {
+  full_name: string;
+  description: string;
+  owner: {
+    login: string;
+    avatar_url: string;
+  };
+}
+
+const Dashboard: React.FC = () => {
+  const [newRepo, setNewRepo] = useState('');
+  const [repositories, setRepositories] = useState<Repository[]>([]);
+
+  async function handleAddRepository(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const response = await api.get<Repository>(`repos/${newRepo}`);
+
+    setRepositories([...repositories, response.data]);
+
+    setNewRepo('');
+  }
+
+  return (
+    <>
+      <img src={logo} alt="Github explorer" />
+      <Title>Explore repositórios no Github</Title>
+      <Form onSubmit={handleAddRepository}>
+        <input
+          placeholder="Qual o nome do repositório?"
+          value={newRepo}
+          onChange={e => setNewRepo(e.target.value)}
         />
-        <div>
-          <strong>antdavidlima/redacao-up</strong>
-          <p>
-            A social network to practice writing ENEM (Brazilian High School
-            Exam) standard essays
-          </p>
-        </div>
-        <FiChevronRight size={20} />
-      </a>
-      <a href="teste">
-        <img
-          src="https://avatars1.githubusercontent.com/u/29358300?s=460&u=8486fec35b12c3a0cb146db9d646150afcaca94e&v=4"
-          alt="David Lima"
-        />
-        <div>
-          <strong>antdavidlima/redacao-up</strong>
-          <p>
-            A social network to practice writing ENEM (Brazilian High School
-            Exam) standard essays
-          </p>
-        </div>
-        <FiChevronRight size={20} />
-      </a>
-      <a href="teste">
-        <img
-          src="https://avatars1.githubusercontent.com/u/29358300?s=460&u=8486fec35b12c3a0cb146db9d646150afcaca94e&v=4"
-          alt="David Lima"
-        />
-        <div>
-          <strong>antdavidlima/redacao-up</strong>
-          <p>
-            A social network to practice writing ENEM (Brazilian High School
-            Exam) standard essays
-          </p>
-        </div>
-        <FiChevronRight size={20} />
-      </a>
-    </Repositories>
-  </>
-);
+        <button type="submit">Pesquisar</button>
+      </Form>
+      <Repositories>
+        {repositories.map(repository => (
+          <a key={repository.full_name} href="teste">
+            <img
+              src={repository.owner.avatar_url}
+              alt={repository.owner.login}
+            />
+            <div>
+              <strong>{repository.full_name}</strong>
+              <p>{repository.description}</p>
+            </div>
+            <FiChevronRight size={20} />
+          </a>
+        ))}
+      </Repositories>
+    </>
+  );
+};
 
 export default Dashboard;
